@@ -349,8 +349,8 @@ if __name__ == '__main__':
         ey_fields_3d = np.array(vals_field_ey)
 
         # Optionally, save the 3D arrays to .npy files for later use
-        np.save(path +"ex_fields_3d.npy", ex_fields_3d)
-        np.save(path +"ey_fields_3d.npy", ey_fields_3d)
-        np.save(path +"ex_fields_2d.npy", np.array(vals_pd))
+        np.save(path +"er_fields_3d.npy", ex_fields_3d)
+        np.save(path +"ex_fields_3d.npy", ey_fields_3d)
+        # np.save(path +"ex_fields_2d.npy", np.array(vals_pd))
 
 

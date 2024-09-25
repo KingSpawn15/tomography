@@ -10,11 +10,11 @@ sy = 50
 simulation_end_time_meep = 1000
 time_range = simulation_end_time_meep / Time_MEEP_To_Sec * 1e12
 
-outdir = 'tomography/air'
+outdir = 'tomography/air/'
 path = 'saved_matrices/' + outdir 
 # Load the saved 3D NumPy arrays for Ex and Ey fields
-ex_fields_3d = np.load(path + "ex_fields_3d.npy")
-ey_fields_3d = np.load(path + "ey_fields_3d.npy")
+ex_fields_3d = np.load(path + "er_fields_3d.npy")
+ey_fields_3d = np.load(path + "ex_fields_3d.npy")
 
 print(f'Loaded Ex fields shape: {ex_fields_3d.shape}')
 print(f'Loaded Ey fields shape: {ey_fields_3d.shape}')
@@ -68,17 +68,15 @@ def interpolation_loaded_fields(arrtxyz):
 
 # EXAMPLE fields on a plane example 
 
-
-
-# ttg, rrg, zzg = np.meshgrid(tt, rr, xx,indexing='ij')
-
-
+# plots the fields Ex, Ey, Ez on the plane defined by (t, x=10, y, z=0)
 
 # Create the arrays directly
-zp = np.array([0])  # Single value array
+
 tp = np.linspace(0, time_range, 500)
-yp = np.linspace(-100, 100, 1002)
 xp = np.array([10])  # Single value array
+yp = np.linspace(-100, 100, 1002)
+zp = np.array([0])  # Single value array
+
 
 # Create the meshgrid with broadcasting
 tpp, xpp, ypp, zpp = np.meshgrid(tp, xp, yp, zp, indexing='ij')
@@ -91,6 +89,12 @@ input_array[:, 2] = ypp.flatten()
 input_array[:, 3] = zpp.flatten()
 
 # Call the function
+# give an array of inputarray = [t, x, y, z] in the following function
+# Make sure that (data constraints):
+#  sqrt(y**2 + z**2) <= 100 
+#  0<x<25 and 
+#  0 < t < 3
+
 ex, ey, ez = interpolation_loaded_fields(input_array)
 
 # Reshape the output directly
@@ -107,6 +111,8 @@ im1 = axes[0].imshow(ex_slice[:, 0, :, 0].T,
                      aspect=time_range / sx, 
                      extent=[0, time_range, -sx/2, sx/2])
 axes[0].set_title('Ex Slice')
+axes[0].set_xlabel('t [ps]')  # Set x-label
+axes[0].set_ylabel('z [μm]')   # Set y-label
 fig.colorbar(im1, ax=axes[0])  # Add colorbar to the subplot
 
 # Plot for ey_slice
@@ -115,6 +121,8 @@ im2 = axes[1].imshow(ey_slice[:, 0, :, 0].T,
                      aspect=time_range / sx, 
                      extent=[0, time_range, -sx/2, sx/2])
 axes[1].set_title('Ey Slice')
+axes[1].set_xlabel('t [ps]')  # Set x-label
+axes[1].set_ylabel('z [μm]')   # Set y-label
 fig.colorbar(im2, ax=axes[1])  # Add colorbar to the subplot
 
 # Plot for ez_slice
@@ -123,6 +131,8 @@ im3 = axes[2].imshow(ez_slice[:, 0, :, 0].T,
                      aspect=time_range / sx, 
                      extent=[0, time_range, -sx/2, sx/2])
 axes[2].set_title('Ez Slice')
+axes[2].set_xlabel('t [ps]')  # Set x-label
+axes[2].set_ylabel('z [μm]')   # Set y-label
 fig.colorbar(im3, ax=axes[2])  # Add colorbar to the subplot
 
 # Show the plots
