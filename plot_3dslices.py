@@ -10,8 +10,8 @@ sy = 50
 simulation_end_time_meep = 1000
 time_range = simulation_end_time_meep / Time_MEEP_To_Sec * 1e12
 
-outdir = 'tomography/air/'
-path = 'saved_matrices/' + outdir 
+
+path = 'saved_matrices/'
 # Load the saved 3D NumPy arrays for Ex and Ey fields
 ex_fields_3d = np.load(path + "er_fields_3d.npy")
 ey_fields_3d = np.load(path + "ex_fields_3d.npy")

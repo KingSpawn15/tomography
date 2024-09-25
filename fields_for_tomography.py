@@ -174,7 +174,7 @@ def photodember_source(params, xmax, ymax):
 if __name__ == '__main__':
 
     
-    outdir = 'tomography/air'
+    outdir = ''
     # intensity = float(sys.argv[1])
     # t0_sec = float(sys.argv[2]) * 1e-12
     # fwhm_t_fs = float(sys.argv[3])
