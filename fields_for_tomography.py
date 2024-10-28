@@ -164,7 +164,7 @@ def current_photodember_with_pulse_time(params, xprime, yprime):
 
 def photodember_source(params, xmax, ymax):
     sl = [[mp.Source(
-        src=mp.CustomSource(src_func=current_photodember_with_pulse_time(params, xi, yi)),
+        src=mp.CustomSource(src_func=current_photodember_with_pulse_time(params, xi, yi), is_integrated=True),
         center=mp.Vector3(xi,-yi),
         component=mp.Ey) for xi in np.arange(-np.fix(xmax),np.fix(xmax) + 0.5, 0.5)] for yi in np.linspace(0,ymax,5)]
     return list(chain(*sl))
