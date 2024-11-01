@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import RegularGridInterpolator
+from convolve_for_laser_spot import convolve_columns_with_padding
 
 # paramters from FDTD simuation setup
 Time_Sec_To_MEEP = (1e-6 / 3e8)
@@ -13,8 +14,18 @@ time_range = simulation_end_time_meep / Time_MEEP_To_Sec * 1e12
 
 path = 'saved_matrices/'
 # Load the saved 3D NumPy arrays for Ex and Ey fields
-ex_fields_3d = np.load(path + "er_fields_3d.npy")
-ey_fields_3d = np.load(path + "ex_fields_3d.npy")
+ex_fields_3d = np.load(path + "er_fields_3d_rectification.npy")
+ey_fields_3d = np.load(path + "ex_fields_3d_rectification.npy")
+
+laser_spot_size = 40 / np.sqrt(8*np.log(2))
+y = np.linspace(-100,100,1002)
+kernel = np.exp(-(y - 0)**2 / (2 * laser_spot_size**2))
+
+for ind in range(0,ex_fields_3d.shape[2]):
+    ex_fields_3d[:,:,ind] = convolve_columns_with_padding(ex_fields_3d[:,:,ind].T, kernel).T
+    ey_fields_3d[:,:,ind] = convolve_columns_with_padding(ey_fields_3d[:,:,ind].T, kernel).T
+
+
 
 print(f'Loaded Ex fields shape: {ex_fields_3d.shape}')
 print(f'Loaded Ey fields shape: {ey_fields_3d.shape}')
@@ -50,18 +61,18 @@ def interpolation_loaded_fields(arrtxyz):
 
     # Calculate polar coordinates directly for interpolation
     rpoints = np.sqrt(ypoints**2 + zpoints**2)
-    phi = np.arctan2(ypoints, zpoints)
+    phi = np.arctan2(ypoints, zpoints) 
 
     # Prepare points for interpolation
     points_to_interpolate = np.vstack((tpoints, rpoints, xpoints)).T
 
     # Perform interpolation for electric field components
     interpolated_r = interpolator_r(points_to_interpolate)
-    interpolated_ex = interpolator_x(points_to_interpolate)
+    interpolated_ex = interpolator_x(points_to_interpolate) * (np.cos(phi))
 
     # Compute E_y and E_z components using vectorized operations
-    interpolated_ey = interpolated_r * np.sin(phi)
-    interpolated_ez = interpolated_r * np.cos(phi)
+    interpolated_ey = interpolated_r * np.sin(0)
+    interpolated_ez = interpolated_r * np.cos(0)
 
     return interpolated_ex, interpolated_ey, interpolated_ez
 
@@ -74,12 +85,12 @@ def interpolation_loaded_fields(arrtxyz):
 
 tp = np.linspace(0, time_range, 500)
 xp = np.array([1])  # Single value array
-yp = np.linspace(-100, 100, 1002)
-zp = np.array([0])  # Single value array
+yp = np.array([0])  # Single value array
+zp = np.linspace(-100, 100, 1002)
 
 
 # Create the meshgrid with broadcasting
-tpp, xpp, ypp, zpp = np.meshgrid(tp, xp, yp, zp, indexing='ij')
+tpp, xpp, ypp, zpp = np.meshgrid(tp, xp, yp, zp)
 
 # Stack the meshgrid directly to form the input array for find_fields_exeyez
 input_array = np.empty((tpp.size, 4))
@@ -98,15 +109,15 @@ input_array[:, 3] = zpp.flatten()
 ex, ey, ez = interpolation_loaded_fields(input_array)
 
 # Reshape the output directly
-ex_slice = ex.reshape((500, 1, 1002, 1))
-ey_slice = ey.reshape((500, 1, 1002, 1))
-ez_slice = ez.reshape((500, 1, 1002, 1))
+ex_slice = ex.reshape((500, 1, 1, 1002))
+ey_slice = ey.reshape((500, 1, 1, 1002))
+ez_slice = ez.reshape((500, 1, 1, 1002))
 
 # Create a figure with 3 subplots
 fig, axes = plt.subplots(1, 3, figsize=(15, 5))  # 1 row, 3 columns of subplots
 
 # Plot for ex_slice
-im1 = axes[0].imshow(ex_slice[:, 0, :, 0].T, 
+im1 = axes[0].imshow(ex_slice[:, 0, 0, :].T, 
                      cmap='bwr', 
                      aspect=time_range / sx, 
                      extent=[0, time_range, -sx/2, sx/2])
@@ -116,7 +127,7 @@ axes[0].set_ylabel('z [μm]')   # Set y-label
 fig.colorbar(im1, ax=axes[0])  # Add colorbar to the subplot
 
 # Plot for ey_slice
-im2 = axes[1].imshow(ey_slice[:, 0, :, 0].T, 
+im2 = axes[1].imshow(ey_slice[:, 0, 0, :].T, 
                      cmap='bwr', 
                      aspect=time_range / sx, 
                      extent=[0, time_range, -sx/2, sx/2])
@@ -126,7 +137,7 @@ axes[1].set_ylabel('z [μm]')   # Set y-label
 fig.colorbar(im2, ax=axes[1])  # Add colorbar to the subplot
 
 # Plot for ez_slice
-im3 = axes[2].imshow(ez_slice[:, 0, :, 0].T, 
+im3 = axes[2].imshow(ez_slice[:, 0, 0, :].T, 
                      cmap='bwr', 
                      aspect=time_range / sx, 
                      extent=[0, time_range, -sx/2, sx/2])
@@ -138,5 +149,84 @@ fig.colorbar(im3, ax=axes[2])  # Add colorbar to the subplot
 # Show the plots
 plt.tight_layout()  # Adjust spacing between subplots
 plt.show()
+
+
+
+
+# Create the arrays directly
+
+tp = np.array([1])
+xp = np.array([1])  
+yp = np.linspace(-100, 100, 500)
+zp = np.linspace(-100, 100, 1002)  
+
+# Create the meshgrid with broadcasting
+tpp, xpp, ypp, zpp = np.meshgrid(tp, xp, yp, zp)
+
+# Stack the meshgrid directly to form the input array for find_fields_exeyez
+input_array = np.empty((tpp.size, 4))
+input_array[:, 0] = tpp.flatten()
+input_array[:, 1] = xpp.flatten()
+input_array[:, 2] = ypp.flatten()
+input_array[:, 3] = zpp.flatten()
+
+# Call the function
+# give an array of inputarray = [t, x, y, z] in the following function
+# Make sure that (data constraints):
+#  sqrt(y**2 + z**2) <= 100 
+#  0<x<25 and 
+#  0 < t < 3
+
+ex, ey, ez = interpolation_loaded_fields(input_array)
+
+# Reshape the output directly
+ex_slice = ex.reshape((1, 1, 500, 1002))
+ey_slice = ey.reshape((1, 1, 500, 1002))
+ez_slice = ez.reshape((1, 1, 500, 1002))
+# Create a figure with 3 subplots
+fig, axes = plt.subplots(1, 3, figsize=(15, 5))  # 1 row, 3 columns of subplots
+
+# Plot for ex_slice
+im1 = axes[0].imshow(ex_slice[0, 0, :, :].T, 
+                     cmap='bwr', 
+                     aspect=sx / sx, 
+                     extent=[-sx/2, sx/2, -sx/2, sx/2])
+axes[0].set_title('Ex Slice')
+axes[0].set_xlabel('y [ps]')  # Set x-label
+axes[0].set_ylabel('z [μm]')   # Set y-label
+fig.colorbar(im1, ax=axes[0])  # Add colorbar to the subplot
+
+# Plot for ey_slice
+im2 = axes[1].imshow(ey_slice[0, 0, :, :].T, 
+                     cmap='bwr', 
+                     aspect=sx / sx, 
+                     extent=[-sx/2, sx/2, -sx/2, sx/2])
+axes[1].set_title('Ey Slice')
+axes[1].set_xlabel('y [ps]')  # Set x-label
+axes[1].set_ylabel('z [μm]')   # Set y-label
+fig.colorbar(im2, ax=axes[1])  # Add colorbar to the subplot
+
+# # Plot for ez_slice
+# im3 = axes[2].imshow(ez_slice[0, 0, :, :].T, 
+#                      cmap='bwr', 
+#                      aspect=sx / sx, 
+#                      extent=[-sx/2, sx/2, -sx/2, sx/2])
+# axes[0].set_title('Ex Slice')
+# axes[0].set_xlabel('y [ps]')  # Set x-label
+# axes[0].set_ylabel('z [μm]')   # Set y-label
+# fig.colorbar(im3, ax=axes[2])  # Add colorbar to the subplot
+
+# Plot for ez_slice
+im3 = axes[2].quiver(ey_slice[0, 0, ::50, ::50].T, ez_slice[0, 0, ::50, ::50].T, scale = 0.2)
+axes[2].set_title('Ez Slice')
+axes[2].set_xlabel('y [ps]')  # Set x-label
+axes[2].set_ylabel('z [μm]')   # Set y-label
+fig.colorbar(im3, ax=axes[2])  # Add colorbar to the subplot
+
+
+# Show the plots
+plt.tight_layout()  # Adjust spacing between subplots
+plt.show()
+
 
 print()
