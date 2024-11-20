@@ -187,7 +187,7 @@ if __name__ == '__main__':
     # fwhm_t_fs = float(sys.argv[3])
     intensity = 10
     t0_sec = 0.5 * 1e-12
-    fwhm_t_fs = 50
+    fwhm_t_fs = 200
     
 
     Freq_Hz_To_MEEP = 3 * 10**14
