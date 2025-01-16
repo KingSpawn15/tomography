@@ -174,7 +174,7 @@ def photodember_source(params, xmax, ymax):
 if __name__ == '__main__':
 
     
-    outdir = ''
+    outdir = 'spot_size_10'
     # intensity = float(sys.argv[1])
     # t0_sec = float(sys.argv[2]) * 1e-12
     # fwhm_t_fs = float(sys.argv[3])
@@ -207,7 +207,7 @@ if __name__ == '__main__':
         't0_sec': t0_sec,
         'weight': 1,
         'alpha': inas['alpha'],
-        'sigma_spot': 40 / np.sqrt(8 * np.log(2)),
+        'sigma_spot': 10 / np.sqrt(8 * np.log(2)),
         'neq': inas['n_eq'],
         'nexc_0': inas['n_exc_0'] * intensity / 10 ,
         'gamma': inas['gamma_p_sec_1'],
